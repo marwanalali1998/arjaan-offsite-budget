@@ -1,0 +1,428 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Arjaan Offsite Budget</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Schibsted+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: summary strip on top, two editable day ledgers side by side, deadlines + terms + venue below */
+:root {
+  --bg: #eef2f1;
+  --surface: #ffffff;
+  --surface-2: #f6f8f7;
+  --ink: #12201d;
+  --muted: #5a6b67;
+  --line: #d6dfdc;
+  --accent: #0d6a62;        /* customers / primary */
+  --accent-soft: #d5ebe7;
+  --sand: #a87a1f;          /* SAP internal */
+  --sand-soft: #f3e7cc;
+  --good: #2c7a3f;
+  --warn: #a5650a;
+  --warn-soft: #fbeed6;
+  --crit: #b3261e;
+  --crit-soft: #fbe2df;
+  --f-display: "Young Serif", Georgia, "Times New Roman", serif;
+  --f-body: "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-data: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0e1615; --surface: #152120; --surface-2: #1a2827; --ink: #e6efed; --muted: #93a8a3;
+    --line: #2a3b39; --accent: #4fc0b2; --accent-soft: #173b37; --sand: #e0b45a; --sand-soft: #3a2f17;
+    --good: #6cc98a; --warn: #f0b35a; --warn-soft: #3a2a12; --crit: #ff8a80; --crit-soft: #3d1a18;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0e1615; --surface: #152120; --surface-2: #1a2827; --ink: #e6efed; --muted: #93a8a3;
+  --line: #2a3b39; --accent: #4fc0b2; --accent-soft: #173b37; --sand: #e0b45a; --sand-soft: #3a2f17;
+  --good: #6cc98a; --warn: #f0b35a; --warn-soft: #3a2a12; --crit: #ff8a80; --crit-soft: #3d1a18;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5;
+  padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 24px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; font-weight: 400; }
+.num { font-family: var(--f-data); font-variant-numeric: tabular-nums; }
+.label { font-size: 11.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Header */
+header { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: end; justify-content: space-between; }
+header h1 { font-family: var(--f-display); font-size: clamp(28px, 4.4vw, 42px); line-height: 1.08; }
+header p { margin: 6px 0 0; color: var(--muted); max-width: 60ch; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; font-size: 13px; font-weight: 600; background: var(--surface); border: 1px solid var(--line); }
+.chip.crit { background: var(--crit-soft); color: var(--crit); border-color: transparent; }
+.chip.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+/* Summary */
+.summary { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; display: grid; gap: 18px; }
+.sum-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 20px; }
+.sum-grid > div { display: grid; gap: 4px; align-content: start; }
+.big { font-family: var(--f-data); font-variant-numeric: tabular-nums; font-size: clamp(30px, 4.6vw, 44px); font-weight: 600; letter-spacing: -.02em; line-height: 1.05; }
+.mid { font-family: var(--f-data); font-variant-numeric: tabular-nums; font-size: 24px; font-weight: 600; line-height: 1.15; }
+.sub { font-size: 13px; color: var(--muted); }
+.cur { font-size: .5em; font-weight: 500; color: var(--muted); margin-right: 4px; letter-spacing: 0; }
+.bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--surface-2); }
+.bar span { transition: width .3s ease; }
+.bar .c { background: var(--accent); }
+.bar .s { background: var(--sand); }
+.bar .e { background: repeating-linear-gradient(45deg, var(--crit) 0 3px, transparent 3px 7px); opacity: .55; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.sw-c { background: var(--accent); } .sw-s { background: var(--sand); }
+.sw-e { background: repeating-linear-gradient(45deg, var(--crit) 0 2px, transparent 2px 4px); }
+
+/* Days */
+.days { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.day { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: grid; grid-template-rows: auto 1fr auto; }
+.day-head { padding: 18px 20px 14px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; border-bottom: 1px solid var(--line); }
+.day-head h2 { font-family: var(--f-display); font-size: 22px; }
+.day-head .sub { text-align: right; }
+.inputs { padding: 16px 20px; display: grid; gap: 12px; }
+.row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; }
+.row-label { display: flex; align-items: center; gap: 10px; font-weight: 500; }
+.row-label small { display: block; color: var(--muted); font-weight: 400; font-size: 12.5px; }
+.tag { width: 10px; height: 28px; border-radius: 3px; flex: none; }
+.stepper { display: inline-flex; align-items: stretch; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: var(--surface-2); }
+.stepper button { width: 36px; border: 0; background: transparent; cursor: pointer; font-size: 18px; color: var(--muted); }
+.stepper button:hover { background: var(--accent-soft); color: var(--accent); }
+.stepper input { width: 58px; border: 0; border-inline: 1px solid var(--line); background: var(--surface); text-align: center; padding: 7px 0; font-family: var(--f-data); font-variant-numeric: tabular-nums; font-weight: 600; font-size: 16px; -moz-appearance: textfield; }
+.stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.status { margin: 0 20px; padding: 9px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; }
+.status.ok { background: var(--accent-soft); color: var(--accent); }
+.status.warn { background: var(--warn-soft); color: var(--warn); }
+.status.crit { background: var(--crit-soft); color: var(--crit); }
+.ledger { padding: 14px 20px 18px; display: grid; gap: 6px; font-size: 14px; }
+.ledger .li { display: grid; grid-template-columns: 1fr auto; gap: 12px; }
+.ledger .li span:last-child { font-family: var(--f-data); font-variant-numeric: tabular-nums; }
+.ledger .li .m { color: var(--muted); }
+.ledger .tot { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 4px; font-weight: 700; font-size: 15px; }
+
+/* Lower */
+.lower { display: grid; grid-template-columns: 1.15fr 1fr; gap: 20px; align-items: start; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 14px; }
+.panel h3 { font-family: var(--f-display); font-size: 20px; }
+.timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.timeline li { display: grid; grid-template-columns: 92px 1fr auto; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); align-items: baseline; }
+.timeline li:first-child { border-top: 0; }
+.timeline .when { font-family: var(--f-data); font-size: 13px; font-weight: 600; }
+.timeline .what { font-size: 14px; }
+.timeline .what small { display: block; color: var(--muted); font-size: 12.5px; }
+.pill { font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; font-family: var(--f-data); }
+.pill.crit { background: var(--crit-soft); color: var(--crit); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.ok { background: var(--accent-soft); color: var(--accent); }
+.pill.mute { background: var(--surface-2); color: var(--muted); }
+.timeline li.off { opacity: .45; }
+.toggle { display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; }
+.toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+.rates { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.field { display: grid; gap: 5px; }
+.field input { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); font-family: var(--f-data); font-variant-numeric: tabular-nums; font-weight: 600; }
+.note { font-size: 13px; color: var(--muted); margin: 0; max-width: 65ch; }
+.incl { margin: 0; padding-left: 18px; font-size: 14px; display: grid; gap: 3px; columns: 2; column-gap: 24px; }
+.incl li { break-inside: avoid; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn { border: 1px solid var(--line); background: var(--surface-2); padding: 8px 14px; border-radius: 9px; cursor: pointer; font-weight: 600; font-size: 14px; }
+.btn.primary { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+.btn:hover { filter: brightness(1.05); }
+.toast { font-size: 13px; color: var(--good); align-self: center; }
+
+.venue { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.venue div { display: grid; gap: 2px; }
+.venue .mid { font-size: 22px; }
+footer { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 20px; }
+
+@media (max-width: 860px) {
+  .sum-grid { grid-template-columns: 1fr 1fr; }
+  .days, .lower { grid-template-columns: 1fr; }
+  .venue { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 440px) {
+  .sum-grid { grid-template-columns: 1fr; }
+  .incl { columns: 1; }
+  .timeline li { grid-template-columns: 76px 1fr; }
+  .timeline li .pill { grid-column: 2; justify-self: start; }
+}
+@media (prefers-reduced-motion: reduce) { .bar span { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="label">Arjaan by Rotana · Dubai Media City · Garden Room</div>
+      <h1>Offsite budget, 23–24 Nov 2026</h1>
+      <p>Edit headcount and breakout rooms per day. Totals, the minimum-guarantee charge and the customer / SAP split update as you type.</p>
+    </div>
+    <div class="chips" id="chips"></div>
+  </header>
+
+  <section class="summary" aria-label="Summary">
+    <div class="sum-grid">
+      <div>
+        <div class="label">Estimated total, both days</div>
+        <div class="big" id="grand"></div>
+        <div class="sub" id="grandSub"></div>
+      </div>
+      <div>
+        <div class="label">Per attendee-day</div>
+        <div class="mid" id="perHead"></div>
+        <div class="sub" id="perHeadSub"></div>
+      </div>
+      <div>
+        <div class="label" style="color:var(--accent)">Customers share</div>
+        <div class="mid" id="custShare"></div>
+        <div class="sub" id="custSub"></div>
+      </div>
+      <div>
+        <div class="label" style="color:var(--sand)">SAP internal share</div>
+        <div class="mid" id="sapShare"></div>
+        <div class="sub" id="sapSub"></div>
+      </div>
+    </div>
+    <div class="bar" id="bar" aria-hidden="true"><span class="c"></span><span class="s"></span><span class="e"></span></div>
+    <div class="legend">
+      <span><i class="sw-c"></i>Customers</span>
+      <span><i class="sw-s"></i>SAP internal</span>
+      <span><i class="sw-e"></i>Paid for, unfilled seats (minimum guarantee)</span>
+      <span>Unfilled-seat and breakout costs are shared by headcount.</span>
+    </div>
+  </section>
+
+  <section class="days" id="days"></section>
+
+  <section class="lower">
+    <div class="panel">
+      <h3>Deadlines</h3>
+      <label class="toggle"><input type="checkbox" id="speaker"> The sessions have a trainer or speaker (permit needs 10 working days)</label>
+      <ol class="timeline" id="timeline"></ol>
+      <p class="note">Working days counted Monday to Friday (UAE week). The permit clock starts only once DTCM has every document plus the signed contract.</p>
+    </div>
+
+    <div class="panel">
+      <h3>Rates from the quote</h3>
+      <div class="rates">
+        <label class="field"><span class="label">Day package / person</span><input type="number" id="rate" min="0" step="5"></label>
+        <label class="field"><span class="label">Breakout room / day</span><input type="number" id="brRate" min="0" step="50"></label>
+        <label class="field"><span class="label">Minimum guarantee / day</span><input type="number" id="guar" min="0" step="1"></label>
+        <label class="field"><span class="label">Taxes &amp; fees %</span><input type="number" id="tax" min="0" step="0.5"></label>
+      </div>
+      <p class="note">The quote does not say if rates are net. Dubai hotels often add service charge, municipality fee and VAT on top. Ask Mary Ann and set the % here if they apply.</p>
+      <div class="label">Package includes</div>
+      <ul class="incl">
+        <li>Theatre set-up, 45 seats</li>
+        <li>2 coffee breaks + lunch</li>
+        <li>Still water, pads and pens</li>
+        <li>1 flipchart with markers</li>
+        <li>Meeting signage</li>
+        <li>Projector + screen or interactive screen</li>
+      </ul>
+      <div class="actions">
+        <button class="btn primary" id="copy" type="button">Copy summary</button>
+        <button class="btn" id="reset" type="button">Reset to quote</button>
+        <span class="toast" id="toast" role="status"></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="Venue">
+    <h3>The venue</h3>
+    <div class="venue">
+      <div><span class="mid num">19</span><span class="sub">meeting rooms with natural daylight and smart glass</span></div>
+      <div><span class="mid num">10–200</span><span class="sub">delegate range for conference facilities</span></div>
+      <div><span class="mid num">300</span><span class="sub">seated guests in the Skylight Venue for a dinner or reception</span></div>
+      <div><span class="mid num">242</span><span class="sub">rooms, suites and apartments on site</span></div>
+    </div>
+    <p class="note">Steps from the Dubai Tram, 25 km from DXB. Rooms have built-in screens, PA, cordless and conference mics, video and voice conferencing, and high-speed Wi-Fi.</p>
+  </section>
+
+  <footer>
+    <span>Quote from Mary Ann Lacanilao, Events Executive · maryann.lacanilao@rotana.com · Dir +971 4 436 0141 · M +971 56 676 7827</span>
+    <span>An inquiry, not a booking. Venues are first come, first served.</span>
+  </footer>
+</div>
+
+<script>
+(() => {
+  const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+  const EVENT = new Date(2026, 10, 23);
+  const VALID_UNTIL = new Date(2026, 9, 30);
+  const KEY = "arjaan-budget-v1";
+  // Customer / SAP split is an example; the quote only gives 45 per day.
+  const DEFAULTS = {
+    rate: 260, brRate: 1800, guar: 45, tax: 0, speaker: false,
+    days: [
+      { date: "Mon 23 Nov", cust: 30, sap: 15, br: 4 },
+      { date: "Tue 24 Nov", cust: 30, sap: 15, br: 1 }
+    ]
+  };
+  let S;
+  try { S = JSON.parse(localStorage.getItem(KEY)) || null; } catch (e) { S = null; }
+  if (!S || !S.days) S = structuredClone(DEFAULTS);
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+  const fmt = n => Math.round(n).toLocaleString("en-US");
+  const aed = n => `<span class="cur">AED</span>${fmt(n)}`;
+  const $ = id => document.getElementById(id);
+  const clampInt = v => Math.max(0, Math.floor(Number(v) || 0));
+
+  // Days view
+  const daysEl = $("days");
+  S.days.forEach((d, i) => {
+    const el = document.createElement("article");
+    el.className = "day";
+    el.innerHTML = `
+      <div class="day-head"><h2>Day ${i + 1} · ${d.date}</h2><span class="sub num" id="dt${i}"></span></div>
+      <div class="inputs">
+        ${stepRow(i, "cust", "Customers", "External guests", "var(--accent)")}
+        ${stepRow(i, "sap", "SAP internal", "Colleagues and hosts", "var(--sand)")}
+        ${stepRow(i, "br", "Breakout rooms", "AED <span data-br></span> per room", "var(--line)")}
+      </div>
+      <div><div class="status" id="st${i}"></div><div class="ledger" id="lg${i}"></div></div>`;
+    daysEl.appendChild(el);
+  });
+  function stepRow(i, k, title, hint, color) {
+    return `<div class="row">
+      <label class="row-label" for="in-${i}-${k}"><span class="tag" style="background:${color}"></span><span>${title}<small>${hint}</small></span></label>
+      <div class="stepper">
+        <button type="button" data-d="${i}" data-k="${k}" data-step="-1" aria-label="Fewer ${title}">−</button>
+        <input type="number" inputmode="numeric" min="0" id="in-${i}-${k}" data-d="${i}" data-k="${k}">
+        <button type="button" data-d="${i}" data-k="${k}" data-step="1" aria-label="More ${title}">+</button>
+      </div></div>`;
+  }
+  daysEl.addEventListener("click", e => {
+    const b = e.target.closest("button[data-step]"); if (!b) return;
+    const d = S.days[b.dataset.d]; d[b.dataset.k] = Math.max(0, d[b.dataset.k] + Number(b.dataset.step));
+    syncInputs(); render();
+  });
+  daysEl.addEventListener("input", e => {
+    const t = e.target; if (!t.dataset.k) return;
+    S.days[t.dataset.d][t.dataset.k] = clampInt(t.value); render();
+  });
+  ["rate", "brRate", "guar", "tax"].forEach(k => $(k).addEventListener("input", e => { S[k] = Math.max(0, Number(e.target.value) || 0); render(); }));
+  $("speaker").addEventListener("change", e => { S.speaker = e.target.checked; render(); });
+
+  function syncInputs() {
+    S.days.forEach((d, i) => ["cust", "sap", "br"].forEach(k => { const el = $(`in-${i}-${k}`); if (document.activeElement !== el) el.value = d[k]; }));
+    ["rate", "brRate", "guar", "tax"].forEach(k => { if (document.activeElement !== $(k)) $(k).value = S[k]; });
+    $("speaker").checked = !!S.speaker;
+  }
+
+  function calc() {
+    const taxF = 1 + S.tax / 100;
+    let T = { total: 0, cust: 0, sap: 0, empty: 0, heads: 0, custHeads: 0, sapHeads: 0, emptySeats: 0 };
+    const days = S.days.map(d => {
+      const heads = d.cust + d.sap;
+      const billed = Math.max(heads, S.guar);
+      const empty = billed - heads;
+      const pkg = billed * S.rate, brk = d.br * S.brRate;
+      const sub = pkg + brk, taxAmt = sub * (taxF - 1), total = sub * taxF;
+      const custC = heads ? total * d.cust / heads : 0;
+      const sapC = heads ? total * d.sap / heads : 0;
+      const emptyC = empty * S.rate * taxF;
+      T.total += total; T.cust += custC; T.sap += sapC; T.empty += emptyC;
+      T.heads += heads; T.custHeads += d.cust; T.sapHeads += d.sap; T.emptySeats += empty;
+      return { ...d, heads, billed, empty, pkg, brk, taxAmt, total };
+    });
+    return { days, T };
+  }
+
+  function render() {
+    save();
+    document.querySelectorAll("[data-br]").forEach(s => s.textContent = fmt(S.brRate));
+    const { days, T } = calc();
+
+    days.forEach((d, i) => {
+      $(`dt${i}`).textContent = `${d.heads} people · AED ${fmt(d.total)}`;
+      const st = $(`st${i}`);
+      if (d.heads < S.guar) { st.className = "status crit"; st.textContent = `${d.empty} seat${d.empty === 1 ? "" : "s"} below the ${S.guar}-person guarantee. You still pay for ${S.guar}.`; }
+      else if (d.heads > 45) { st.className = "status warn"; st.textContent = `${d.heads} people exceeds the 45-seat theatre set-up quoted. Confirm room capacity with the hotel.`; }
+      else { st.className = "status ok"; st.textContent = `Meets the ${S.guar}-person guarantee.`; }
+      $(`lg${i}`).innerHTML = `
+        <div class="li"><span>Day package · ${d.billed} × AED ${fmt(S.rate)}${d.empty ? ` <span class="m">(incl. ${d.empty} unfilled)</span>` : ""}</span><span>${fmt(d.pkg)}</span></div>
+        <div class="li"><span>Breakout rooms · ${d.br} × AED ${fmt(S.brRate)}</span><span>${fmt(d.brk)}</span></div>
+        ${S.tax ? `<div class="li"><span class="m">Taxes &amp; fees · ${S.tax}%</span><span>${fmt(d.taxAmt)}</span></div>` : ""}
+        <div class="li tot"><span>Day ${i + 1} total</span><span>AED ${fmt(d.total)}</span></div>`;
+    });
+
+    $("grand").innerHTML = aed(T.total);
+    $("grandSub").textContent = `${T.heads} attendee-days · ${S.tax ? `incl. ${S.tax}% taxes & fees` : "before any taxes & fees"}`;
+    $("perHead").innerHTML = T.heads ? aed(T.total / T.heads) : "–";
+    $("perHeadSub").textContent = `vs AED ${fmt(S.rate)} package rate`;
+    $("custShare").innerHTML = aed(T.cust);
+    $("custSub").textContent = `${T.custHeads} attendee-days · ${T.total ? Math.round(T.cust / T.total * 100) : 0}%`;
+    $("sapShare").innerHTML = aed(T.sap);
+    $("sapSub").textContent = `${T.sapHeads} attendee-days · ${T.total ? Math.round(T.sap / T.total * 100) : 0}%`;
+
+    // Bar: empty-seat cost carved out of the shares so the stripes show waste
+    const [bc, bs, be] = document.querySelectorAll("#bar span");
+    const tot = T.total || 1, ef = T.empty / tot;
+    const cShare = T.cust / tot * (1 - ef), sShare = T.sap / tot * (1 - ef);
+    bc.style.width = cShare * 100 + "%"; bs.style.width = sShare * 100 + "%"; be.style.width = ef * 100 + "%";
+
+    renderTimeline();
+  }
+
+  // Deadlines
+  function workdaysBefore(date, n) {
+    const d = new Date(date);
+    while (n > 0) { d.setDate(d.getDate() - 1); const w = d.getDay(); if (w !== 0 && w !== 6) n--; }
+    return d;
+  }
+  const dayDiff = d => Math.round((d - TODAY) / 864e5);
+  const short = d => d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  function pillFor(d) {
+    const n = dayDiff(d);
+    if (n < 0) return `<span class="pill mute">passed</span>`;
+    if (n === 0) return `<span class="pill crit">today</span>`;
+    const cls = n <= 3 ? "crit" : n <= 10 ? "warn" : "ok";
+    return `<span class="pill ${cls}">${n} day${n === 1 ? "" : "s"}</span>`;
+  }
+  function renderTimeline() {
+    const items = [
+      { d: VALID_UNTIL, t: "Quote expires", s: "Rates valid until 30/10/2026. Re-confirm availability when you reply." },
+      { d: workdaysBefore(EVENT, 10), t: "Permit files + signed contract, with speaker", s: "DTCM needs 10 working days for sessions with a trainer or speaker.", off: !S.speaker },
+      { d: workdaysBefore(EVENT, 5), t: "Permit files + signed contract, no speaker", s: "DTCM needs 5 working days without a trainer or speaker.", off: S.speaker },
+      { d: workdaysBefore(EVENT, 3), t: "Final numbers to hotel", s: "After this you pay the higher of the guarantee, confirmed or actual headcount." },
+      { d: EVENT, t: "Event, day 1", s: "Garden Room, 3 rooms combined." }
+    ];
+    $("timeline").innerHTML = items.map(x => `<li class="${x.off ? "off" : ""}"><span class="when">${short(x.d)}</span><span class="what">${x.t}<small>${x.s}</small></span>${x.off ? `<span class="pill mute">n/a</span>` : pillFor(x.d)}</li>`).join("");
+
+    const exp = dayDiff(VALID_UNTIL), nextPermit = workdaysBefore(EVENT, S.speaker ? 10 : 5);
+    $("chips").innerHTML =
+      (exp >= 0 ? `<span class="chip ${exp <= 3 ? "crit" : "warn"}"><span class="dot"></span>Quote expires ${exp === 0 ? "today" : exp === 1 ? "tomorrow" : `in ${exp} days`}</span>` : `<span class="chip crit"><span class="dot"></span>Quote expired, ask for an extension</span>`) +
+      `<span class="chip"><span class="dot" style="color:var(--accent)"></span>Permit files by ${short(nextPermit)}</span>`;
+  }
+
+  $("reset").addEventListener("click", () => { S = structuredClone(DEFAULTS); syncInputs(); render(); toast("Reset to the quoted figures."); });
+  $("copy").addEventListener("click", async () => {
+    const { days, T } = calc();
+    const lines = [
+      "Arjaan by Rotana Dubai Media City, 23–24 Nov 2026 – budget estimate",
+      ...days.map((d, i) => `Day ${i + 1} (${d.date}): ${d.cust} customers + ${d.sap} SAP = ${d.heads} (billed ${d.billed}), ${d.br} breakout room(s) – AED ${fmt(d.total)}`),
+      `Total: AED ${fmt(T.total)}${S.tax ? ` incl. ${S.tax}% taxes & fees` : " (before taxes & fees)"}`,
+      `Customers: AED ${fmt(T.cust)} · SAP internal: AED ${fmt(T.sap)}`,
+      `Rates: AED ${S.rate}/person/day package, AED ${S.brRate}/breakout room/day, min. ${S.guar} people/day`
+    ];
+    try { await navigator.clipboard.writeText(lines.join("\n")); toast("Copied. Paste it into your email."); }
+    catch (e) { toast("Copy is blocked here. Select the figures on the page instead."); }
+  });
+  let tt; function toast(m) { $("toast").textContent = m; clearTimeout(tt); tt = setTimeout(() => $("toast").textContent = "", 3500); }
+
+  syncInputs(); render();
+})();
+</script>
+
+</body></html>
